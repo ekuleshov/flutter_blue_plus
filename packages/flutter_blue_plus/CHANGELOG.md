@@ -1,3 +1,20 @@
+## 1.35.3
+* **[Feature]** support for web optional services (#1124)
+* **[Feature]** option to provide pairing PIN to `createBond` (#1119)
+
+## 1.35.2
+* **[Refactor]** add log color
+* **[Refactor]** resolve the Dart analyzer issues
+
+## 1.35.1
+* **[Fix]** Bluetooth characteristic set notify value
+* **[Fix]** Bluetooth device create bond
+* **[Fix]** Bluetooth device remove bond
+* **[Fix]** Bluetooth device connect
+* **[Fix]** Bluetooth device disconnect
+* **[Fix]** Bluetooth adapter turn on
+* **[Fix]** Bluetooth adapter turn off
+
 ## 1.35.0
 * **[Feature]** add platform interface
 

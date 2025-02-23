@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'device_identifier.dart';
 import 'guid.dart';
 import 'log_level.dart';
@@ -78,6 +80,7 @@ class BmScanSettings {
   final bool androidLegacy;
   final int androidScanMode;
   final bool androidUsesFineLocation;
+  final List<Guid> webOptionalServices;
 
   BmScanSettings({
     required this.withServices,
@@ -91,6 +94,7 @@ class BmScanSettings {
     required this.androidLegacy,
     required this.androidScanMode,
     required this.androidUsesFineLocation,
+    required this.webOptionalServices,
   });
 
   Map<dynamic, dynamic> toMap() {
@@ -106,6 +110,7 @@ class BmScanSettings {
     data['android_legacy'] = androidLegacy;
     data['android_scan_mode'] = androidScanMode;
     data['android_uses_fine_location'] = androidUsesFineLocation;
+    data['web_optional_services'] = webOptionalServices;
     return data;
   }
 }
@@ -877,10 +882,19 @@ class BmBondStateResponse {
 
 class BmCreateBondRequest {
   DeviceIdentifier remoteId;
+  Uint8List? pin;
 
   BmCreateBondRequest({
     required this.remoteId,
+    required this.pin,
   });
+  
+  Map<dynamic, dynamic> toMap() {
+    final Map<dynamic, dynamic> data = {};
+    data['remote_id'] = remoteId.str;
+    data['pin'] = pin;
+    return data;
+  }
 }
 
 class BmRemoveBondRequest {
@@ -913,9 +927,11 @@ class BmTurnOnRequest {
 
 class BmSetLogLevelRequest {
   LogLevel logLevel;
+  bool logColor;
 
   BmSetLogLevelRequest({
-    required this.logLevel,
+    this.logLevel = LogLevel.none,
+    this.logColor = true,
   });
 }
 

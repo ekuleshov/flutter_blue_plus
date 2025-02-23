@@ -49,7 +49,6 @@ class FlutterBluePlus {
 
   /// FlutterBluePlus log level
   static LogLevel _logLevel = LogLevel.debug;
-  static bool _logColor = true;
 
   ////////////////////
   //  Public
@@ -116,8 +115,20 @@ class FlutterBluePlus {
 
   /// Turn on Bluetooth (Android only),
   static Future<void> turnOn({int timeout = 60}) async {
+    var responseStream = FlutterBluePlusPlatform.instance.onAdapterStateChanged
+        .where((p) => p.adapterState == BmAdapterStateEnum.on);
+
+    // Start listening now, before invokeMethod, to ensure we don't miss the response
+    Future<BmBluetoothAdapterState> futureResponse = responseStream.first;
+
     // invoke
-    await _invokeMethod(() => FlutterBluePlusPlatform.instance.turnOn(BmTurnOnRequest())).fbpTimeout(timeout, "turnOn");
+    bool changed = await _invokeMethod(() => FlutterBluePlusPlatform.instance.turnOn(BmTurnOnRequest()));
+
+    // only wait if bluetooth was off
+    if (changed) {
+      await futureResponse
+          .fbpTimeout(timeout, "turnOn");
+    }
   }
 
   /// Gets the current state of the Bluetooth module
@@ -193,6 +204,9 @@ class FlutterBluePlus {
   ///        dependent on the your Bluetooth stack implementation.
   ///   - [androidScanMode] choose the android scan mode to use when scanning
   ///   - [androidUsesFineLocation] request `ACCESS_FINE_LOCATION` permission at runtime
+  ///   - [webOptionalServices] the [optional services](https://developer.mozilla.org/en-US/docs/Web/API/Bluetooth/requestDevice#optionalservices)
+  ///     for the web target. Required to [access device services](https://webbluetoothcg.github.io/web-bluetooth/#dom-requestdeviceoptions-optionalservices)
+  ///     when scanning without [withServices] parameter.
   static Future<void> startScan({
     List<Guid> withServices = const [],
     List<String> withRemoteIds = const [],
@@ -208,6 +222,7 @@ class FlutterBluePlus {
     bool androidLegacy = false,
     AndroidScanMode androidScanMode = AndroidScanMode.lowLatency,
     bool androidUsesFineLocation = false,
+    List<Guid> webOptionalServices = const [],
   }) async {
     // check args
     assert(removeIfGone == null || continuousUpdates, "removeIfGone requires continuousUpdates");
@@ -252,7 +267,8 @@ class FlutterBluePlus {
           continuousDivisor: continuousDivisor,
           androidLegacy: androidLegacy,
           androidScanMode: androidScanMode.value,
-          androidUsesFineLocation: androidUsesFineLocation);
+          androidUsesFineLocation: androidUsesFineLocation,
+          webOptionalServices: webOptionalServices);
 
       Stream<BmScanResponse> responseStream = FlutterBluePlusPlatform.instance.onScanResponse;
 
@@ -371,8 +387,7 @@ class FlutterBluePlus {
   /// Sets the internal FlutterBlue log level
   static Future<void> setLogLevel(LogLevel level, {color = true}) async {
     _logLevel = level;
-    _logColor = color;
-    await _invokeMethod(() => FlutterBluePlusPlatform.instance.setLogLevel(BmSetLogLevelRequest(logLevel: level)));
+    await _invokeMethod(() => FlutterBluePlusPlatform.instance.setLogLevel(BmSetLogLevelRequest(logLevel: level, logColor: color)));
   }
 
   /// Request Bluetooth PHY support
@@ -574,8 +589,20 @@ class FlutterBluePlus {
   /// Turn off Bluetooth (Android only),
   @Deprecated('Deprecated in Android SDK 33 with no replacement')
   static Future<void> turnOff({int timeout = 10}) async {
+    var responseStream = FlutterBluePlusPlatform.instance.onAdapterStateChanged
+        .where((p) => p.adapterState == BmAdapterStateEnum.off);
+
+    // Start listening now, before invokeMethod, to ensure we don't miss the response
+    Future<BmBluetoothAdapterState> futureResponse = responseStream.first;
+
     // invoke
-    await _invokeMethod(() => FlutterBluePlusPlatform.instance.turnOff(BmTurnOffRequest())).fbpTimeout(timeout, "turnOff");
+    bool changed = await _invokeMethod(() => FlutterBluePlusPlatform.instance.turnOff(BmTurnOffRequest()));
+
+    // only wait if bluetooth was on
+    if (changed) {
+      await futureResponse
+          .fbpTimeout(timeout, "turnOff");
+    }
   }
 
   static void log(String s) {
